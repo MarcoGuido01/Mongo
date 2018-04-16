@@ -80,8 +80,8 @@ public class FitbitTask {
                             String token = FitbitDataDAO.getUserToken(patient.getId_patient());
                             RequestFitbitData req = new RequestFitbitData();
                             
-                            String jsonHR = req.getData(String.format(Constants.requestHRmin, "2017-03-30", "00:00:00", "23:59:59"), token);
-                            String jsonSleep = req.getData(String.format(Constants.requestSleep, "2017-03-30"), token);
+                            String jsonHR = req.getData(String.format(Constants.requestHRmin, "2016-05-16", "00:00:00", "23:59:59"), token);
+                            String jsonSleep = req.getData(String.format(Constants.requestSleep, "2016-05-16"), token);
                             
                             storeHRDailySummary(jsonHR,patient.getId_patient());
                             storeHRIntraday(jsonHR, patient.getId_patient());
@@ -209,7 +209,7 @@ public class FitbitTask {
         }
         
         public static void storeSleepIntraday(String json, int id) {
-            SleepIntradayDeserializer deserializer = new SleepIntradayDeserializer();
+            SleepIntradayDeserializerNOSHORT deserializer = new SleepIntradayDeserializerNOSHORT();
             try {
                 deserializer.deserialize(json, id);
             } catch (IOException ex) {
