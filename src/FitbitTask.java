@@ -74,24 +74,22 @@ public class FitbitTask {
 		for (int i = 0; i < patientsList.size(); i++) {
 
 			patient = (FitbitApplication) patientsList.get(i);
-
 			
 			if(FitbitManager.getDevicesFromFitbit(patient.getId_patient())){
-
-                            
+  
                             String token = FitbitDataDAO.getUserToken(patient.getId_patient());
                             RequestFitbitData req = new RequestFitbitData();
                             
                             String jsonHR = req.getData(String.format(Constants.requestHRmin, "2017-03-30", "00:00:00", "23:59:59"), token);
                             String jsonSleep = req.getData(String.format(Constants.requestSleep, "2017-03-30"), token);
                             
-//                            storeHRDailySummary(jsonHR,patient.getId_patient());
+                            storeHRDailySummary(jsonHR,patient.getId_patient());
                             storeHRIntraday(jsonHR, patient.getId_patient());
                             
-//                            storeSleepDailySummary(jsonSleep, patient.getId_patient());
-//                            storeSingleSleepSummary(jsonSleep, patient.getId_patient());
-//                            storeSleepRange(jsonSleep, patient.getId_patient());
-//                            storeSleepIntraday(jsonSleep, patient.getId_patient());
+                            storeSleepDailySummary(jsonSleep, patient.getId_patient());
+                            storeSingleSleepSummary(jsonSleep, patient.getId_patient());
+                            storeSleepRange(jsonSleep, patient.getId_patient());
+                            storeSleepIntraday(jsonSleep, patient.getId_patient());
 
                             System.out.println("* end  patient " + patient.getId_patient() + " *");
 
