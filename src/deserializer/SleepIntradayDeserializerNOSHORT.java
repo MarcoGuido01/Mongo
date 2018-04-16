@@ -51,11 +51,11 @@ public class SleepIntradayDeserializerNOSHORT {
                 Date date = castDate(date1string);
                 int date1 = (int) (date.getTime()/1000);
                 int seconds = array.get(i).findValue("seconds").asInt();
-                int ref = seconds/30;
+                int ref = seconds/60;
                 String value = array.findValue("level").asText();
                 
                 for(int j=0; j<ref; j++) {
-                    int a = date1 + (30*j);
+                    int a = date1 + (60*j);
                     Date d = secondsToDate(a);
                     FitbitSleepIntra s30= new FitbitSleepIntra(id,d,value);
                     s30.setSleep30secondsAsString(mapper.writeValueAsString(s30));   
