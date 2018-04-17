@@ -18,7 +18,7 @@ public class testerQuery {
     public static void main (String[] args) {
         Query q = new Query();
 //        q.findHRWhenSleep(4);
-        q.findHRinSleep(4, "2016-05-16", "2016-05-17");
+        q.valueSleepMinutes(4,"2016-05-17");
         
     }
 }

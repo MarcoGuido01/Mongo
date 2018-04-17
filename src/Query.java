@@ -1,6 +1,7 @@
 
 import HR.HRDailySummary;
 import QueryObject.HRwhenSleep;
+import QueryObject.SleepMinutes;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -36,45 +37,97 @@ public class Query {
     
     public List<HRwhenSleep> findHRinSleep (int id, String startTime, String endTime) {
         long intervalloInizio = castDate(startTime);
-        long intervalloFine = castDate(endTime);
+        long intervalloFine = castDate(endTime) + 86400000;   //altrimenti mi prenderebbe solo fino alle 00.00 della data impostata come endTime, invece io voglio fino alle 23.59 incluse di quella data, aggiungo quindi l'equivalente in millisec
         
-        DBCollection collectionSleepIntraday = db.getCollection("SleepIntraday");
+        DBCollection collectionSingleSleepSummary = db.getCollection("SingleSleepSummary");
         BasicDBObject idpaziente = new BasicDBObject("id", id);
-        BasicDBObject intervalloScelto = new BasicDBObject();
-        intervalloScelto.put("date", new BasicDBObject("$gte", intervalloInizio).append("$lt", intervalloFine));
+        BasicDBObject intervalloStart = new BasicDBObject();
+        intervalloStart.put("startTime", new BasicDBObject("$gte", intervalloInizio).append("$lt", intervalloFine));
+        BasicDBObject intervalloEnd = new BasicDBObject();
+        intervalloEnd.put("endTime", new BasicDBObject("$gte", intervalloInizio).append("$lt", intervalloFine));
         List<BasicDBObject> query = new ArrayList<BasicDBObject>();
         query.add(idpaziente);
-        query.add(intervalloScelto);
+        query.add(intervalloStart);
+        query.add(intervalloEnd);
         BasicDBObject andQuery = new BasicDBObject();
         andQuery.put("$and", query);
+        List<DBObject> listaSingleSleepSummary = collectionSingleSleepSummary.find(andQuery).toArray();
         
-        List<DBObject> listaSleep = collectionSleepIntraday.find(andQuery).toArray();
-        
+//        intervalloScelto.put("date", new BasicDBObject("$gte", intervalloInizio).append("$lt", intervalloFine));
+//        List<BasicDBObject> query = new ArrayList<BasicDBObject>();
+//        query.add(idpaziente);
+//        query.add(intervalloScelto);
+//        andQuery.put("$and", query);
+//        
+//        List<DBObject> listaSleep = collectionSleepIntraday.find(andQuery).toArray();
+//        
         DBCollection collectionHRIntraday = db.getCollection("HRIntraday");
+        DBCollection collectionSleepIntraday = db.getCollection("SleepIntraday");
+        query.remove(intervalloStart);
+        query.remove(intervalloEnd);
         
-        List<DBObject> listaHRprova = new ArrayList<>();
-        for(int i=0; i<listaSleep.size(); i++) {
-            long dataValue = (long) listaSleep.get(i).get("date");
+        
+        List<DBObject> listaHRObj= new ArrayList<>();
+        List<DBObject> listaSleepObj = new ArrayList<>();
+        for(int i=0; i<listaSingleSleepSummary.size(); i++) {
+            long dataInizio = (long) listaSingleSleepSummary.get(i).get("startTime");
+            long dataFine = (long) listaSingleSleepSummary.get(i).get("endTime");
             BasicDBObject dataQuery = new BasicDBObject();
-            dataQuery.put("date", new BasicDBObject("$eq", dataValue));
-//            dataQuery.put("$eq", dataValue);
-            DBObject obj = collectionHRIntraday.find(dataQuery).one();
-            if(obj==null) {
-                continue;
-            } else
-                listaHRprova.add(obj);
+            dataQuery.put("date", new BasicDBObject("$gte", dataInizio).append("$lte", dataFine));
+            query.add(dataQuery);
+            BasicDBObject and = new BasicDBObject();
+            and.put("$and", query);
+            listaHRObj = collectionHRIntraday.find(and).toArray();
+            
+            listaSleepObj = collectionSleepIntraday.find(and).toArray();
+            
         }
-        
         List<HRwhenSleep> queryObjectList = new ArrayList<>();
-        for(int j=0; j<listaHRprova.size() && j<listaSleep.size(); j++) {
-            long dataValue = (long) listaSleep.get(j).get("date");
-            String sleepValue = (String) listaSleep.get(j).get("value");
-            int HRvalue = (int) listaHRprova.get(j).get("value");
+        for(int j=0; j<listaHRObj.size() && j<listaSleepObj.size(); j++) {
+            long dataValue = (long) listaSleepObj.get(j).get("date");
+            String sleepValue = (String) listaSleepObj.get(j).get("value");
+            int HRvalue = (int) listaHRObj.get(j).get("value");
             HRwhenSleep queryObject = new HRwhenSleep(dataValue, sleepValue, HRvalue);
             queryObjectList.add(queryObject);  
         }
         return queryObjectList;
     }
+            
+////            dataQuery.put("$eq", dataValue);
+//            DBObject obj = collectionHRIntraday.find(dataQuery).one();
+//            if(obj==null) {
+//                continue;
+//            } else
+//                listaHRprova.add(obj);
+//        }
+     
+    public List<SleepMinutes> valueSleepMinutes(int id, String date) {
+        long data = castDate(date)+ 86400000;
+        DBCollection collectionSingleSleepSummary = db.getCollection("SingleSleepSummary");
+        BasicDBObject idpaziente = new BasicDBObject("id", id);
+        BasicDBObject dataQuery = new BasicDBObject();
+        dataQuery.put("endTime", new BasicDBObject("$lt", data));
+        List<BasicDBObject> query = new ArrayList<BasicDBObject>();
+        query.add(idpaziente);
+        query.add(dataQuery);
+        BasicDBObject isMainSleep = new BasicDBObject();
+        isMainSleep.put("isMainSleep", new BasicDBObject("$eq", true));
+        query.add(isMainSleep);
+        BasicDBObject andQuery = new BasicDBObject();
+        andQuery.put("$and", query);
+        List<DBObject> listaSingleSleepSummary = collectionSingleSleepSummary.find(andQuery).toArray();
+        List<SleepMinutes> queryObjectList= new ArrayList<>();
+        for(int i=0; i<listaSingleSleepSummary.size();i++) {
+            if(listaSingleSleepSummary.get(i).get("type").toString().equals("classic")) {
+                DBObject obj = (DBObject) listaSingleSleepSummary.get(i).get("summary");
+                int a=0;
+            }
+        }
+        return null;
+        
+    }
+        
+    
     
     private long castDate (String datastringa) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
